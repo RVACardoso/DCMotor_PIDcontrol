@@ -185,7 +185,7 @@ External Symbols in Data Memory (by address):
                     0x0800                  _tempo
                     0x0802                  _print
                     0x0804                  _count
-                    0x0806                  _test1
+                    0x0806                  _test2
                     0x0808                  __Stdin
                     0x0830                  __Stdout
                     0x0858                  __Stderr
@@ -208,7 +208,7 @@ External Symbols in Data Memory (by name):
                     0x0804                  _count
                     0x0802                  _print
                     0x0800                  _tempo
-                    0x0806                  _test1
+                    0x0806                  _test2
 
 External Symbols in Program Memory (by address):
 
@@ -1424,7 +1424,7 @@ __c30_signature
                     0x0800                  _tempo
                     0x0802                  _print
                     0x0804                  _count
-                    0x0806                  _test1
+                    0x0806                  _test2
 
 .data               0x0808         0xc4
  .data              0x0808         0x88 c:/program files (x86)/microchip/xc16/v1.31/bin/bin/../../lib\liblega-c-elf.a(xfiles.XX_eo)
