@@ -1,5 +1,5 @@
 #define FCY 29491200L
-
+//KUNAMI
 /* Include List */
 #include <libpic30.h>
 #include <p30F4011.h>
@@ -19,7 +19,7 @@
 
 //Global variables
 unsigned int tempo=0;
-int print=0, count=0;
+int print=0, count=0, test1=0;
 
 
 void UART_config(){
