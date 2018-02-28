@@ -19,7 +19,7 @@
 
 //Global variables
 unsigned int tempo=0;
-int print=0, count=0, test2=0;
+int print=0, count=0;
 
 
 void UART_config(){
