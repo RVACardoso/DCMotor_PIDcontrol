@@ -19,7 +19,7 @@
 
 //Global variables
 unsigned int tempo=0;
-int print=0, count=0;
+int print=0, count=0, old_count=0;
 
 
 void UART_config(){
@@ -62,9 +62,10 @@ void TIMER3_config(){
 
 void __attribute__((interrupt, no_auto_psv)) _IC1Interrupt(void){
     IFS0bits.IC1IF = 0;
-    tempo = (unsigned int)TMR3;//IC7BUF;
+    tempo = TMR3;//IC7BUF;
     TMR3=0;   
     print=1;
+    old_count=count;
     count=0;
     _LATC13=~_LATC13;
 }
@@ -85,7 +86,7 @@ void IC1_config(){
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void){    
     IFS0bits.T3IF = 0;
     count++;
-    print=1;
+    //print=1;
 }   
 
 int main(void) {
@@ -96,7 +97,7 @@ int main(void) {
     TIMER2_config();
     TIMER3_config();
            
-    int duty=30;
+    int duty=50;//33
     
     /*configure for OC2 - 40kHz@50% */
     OC2RS = 0.01*duty*PR2;          //sets the initial duty_cycle
@@ -110,14 +111,10 @@ int main(void) {
     T2CONbits.TON = 1;      //turns Timer_2 
     
     while(1){
-        if(print==1){
-            printf("\r\n TMR3: %u\t", tempo);
-            printf("\r\n count: %d\t", count);
+        if(print==1 && old_count==0){
+            printf("\r\n TMR3: %u \t count: %d", tempo, old_count);
             print=0;
         }
-       // printf("\r\n TMR3: %u\t", TMR3);
-        //__delay_ms(200);
-        
     }
     return 0;
 }
