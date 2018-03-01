@@ -19,9 +19,9 @@
 
 //Global variables
 unsigned int tempo=0;
-int print=0, count=0, old_count=0, ic1_interr=0;
+int count=0, old_count=0, ic1_interr=0;
 int duty=30;
-int error=0, error_old=0;
+int error_0=0, error_1=0, error_2=0;
 
 
 void UART_config(){
@@ -92,8 +92,9 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void){
 }   
 
 void PID_control(){
-    int duty_var = (error-error_old)/10;// proporcional a error
-    int duty_temp = duty + duty_var;
+    //int duty_var = (error_0-error_1);// proporcional a error
+    //int duty_temp = duty + duty_var;
+    int duty_temp = 0.5*error_0;
     if (duty_temp < 15){
         duty = 15;
     }else if(duty_temp > 100){
@@ -123,15 +124,17 @@ int main(void) {
     T3CONbits.TON = 1; //turn timer3 on
     T2CONbits.TON = 1;      //turns Timer_2 
     
-    unsigned int setpoint=3000;
+    unsigned int setpoint=400;
     while(1){
         if(ic1_interr==1 && old_count==0){
-            //printf("\r\n TMR3: %u \t count: %d", tempo, old_count);
-            error_old = error;
-            error = setpoint - tempo;
-            printf("\r\n error: %d \t duty: %d", error, duty);
+            int freq = 1000000./tempo;
+            error_2 = error_1;
+            error_1 = error_0;
+            error_0 = setpoint - freq;
+            printf("\r\n freq: %d \t error: %d \t duty: %d", freq, error_0, duty);
+            //printf("\r\n error: %d \t duty: %d", error, duty);
             PID_control();
-            print=0;
+            ic1_interr=0;
         }
     }
     return 0;
