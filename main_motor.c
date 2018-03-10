@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <uart.h>
 #include <ports.h>
+#include "xc.h"
 
 /* For XC16 Ver >= 1.24 */
 #pragma config FCKSMEN=CSW_FSCM_OFF
@@ -15,12 +16,15 @@
 #pragma config MCLRE=MCLR_EN
 #pragma config FPWRT=PWRT_OFF
 
-#include "xc.h"
+#define kp 0.0001
+#define Ti 1000.
+#define Td 250.
 
 //Global variables
 unsigned int tempo=0;
 int count=0, old_count=0, ic1_interr=0;
-int duty=30;
+int duty=25;
+float duty_var=0;
 int error_0=0, error_1=0, error_2=0;
 
 
@@ -90,11 +94,15 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void){
     count++;
     //print=1;
 }   
-
+//0.000003
 void PID_control(){
-    //int duty_var = (error_0-error_1);// proporcional a error
-    //int duty_temp = duty + duty_var;
-    int duty_temp = 0.5*error_0;
+    //float ki = kp*74.*tempo/Ti;
+    //float kd = kp*Td/(74.*tempo);
+    //duty_var = (kp+0.5*ki+kd)*error_0 - (kp-0.5*ki+2*kd)*error_1 + kd*error_2; 
+    duty_var = kp*(error_0-error_1+(tempo/Ti)*error_0+(Td/tempo)*(error_0-2*error_1+error_2));
+    duty_var = 1.*duty_var*tempo;
+    int duty_temp = duty + duty_var;
+   // int duty_temp = 65.+0.45*error_0;
     if (duty_temp < 15){
         duty = 15;
     }else if(duty_temp > 100){
@@ -124,17 +132,29 @@ int main(void) {
     T3CONbits.TON = 1; //turn timer3 on
     T2CONbits.TON = 1;      //turns Timer_2 
     
-    unsigned int setpoint=400;
+    unsigned int setpoint=326; // ->duty 
+    int joao = 0;
     while(1){
         if(ic1_interr==1 && old_count==0){
             int freq = 1000000./tempo;
             error_2 = error_1;
             error_1 = error_0;
             error_0 = setpoint - freq;
-            printf("\r\n freq: %d \t error: %d \t duty: %d", freq, error_0, duty);
+            printf("\r\n tempo: %d \t error: %d \t duty: %d  \t freq: %u \t setpoint: %d", tempo, error_0, duty, freq, setpoint);
             //printf("\r\n error: %d \t duty: %d", error, duty);
             PID_control();
             ic1_interr=0;
+            /*
+            if(joao==20){
+                duty=95;
+                OC2RS = 0.95*PR2;//duty 75
+            }
+            if(joao==100){
+                duty=20;
+                OC2RS = 0.20*PR2;
+                joao=0;
+            }*/
+           // ++joao;
         }
     }
     return 0;
