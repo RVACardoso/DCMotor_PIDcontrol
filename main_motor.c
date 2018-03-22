@@ -16,17 +16,17 @@
 #pragma config MCLRE=MCLR_EN
 #pragma config FPWRT=PWRT_OFF
 
-#define kp 0.0001
-#define Ti 1000.
-#define Td 250.
+#define kp 0.0033
+#define Ti 596926.
+#define Td 149232.
 
 //Global variables
-unsigned int tempo=0;
+unsigned int tempo=0, tempo_old=0;
 int count=0, old_count=0, ic1_interr=0;
-int duty=25;
+int duty=30;
 float duty_var=0;
 int error_0=0, error_1=0, error_2=0;
-
+float sum=0.;
 
 void UART_config(){
     //configure for UART2
@@ -68,6 +68,7 @@ void TIMER3_config(){
 
 void __attribute__((interrupt, no_auto_psv)) _IC1Interrupt(void){
     IFS0bits.IC1IF = 0;
+    tempo_old=tempo;
     tempo = TMR3;//IC7BUF;
     TMR3=0;   
     ic1_interr=1;
@@ -99,12 +100,22 @@ void PID_control(){
     //float ki = kp*74.*tempo/Ti;
     //float kd = kp*Td/(74.*tempo);
     //duty_var = (kp+0.5*ki+kd)*error_0 - (kp-0.5*ki+2*kd)*error_1 + kd*error_2; 
-    duty_var = kp*(error_0-error_1+(tempo/Ti)*error_0+(Td/tempo)*(error_0-2*error_1+error_2));
-    duty_var = 1.*duty_var*tempo;
+    //duty_var = kp*(error_0-error_1+(tempo/Ti)*error_0+(Td/tempo)*(error_0-2*error_1+error_2));
+    //duty_var = (1.+(74.*tempo/Ti)+Td/(74.*tempo))*error_0 -(1+(74.*tempo/Ti)+Td/(74*tempo_old))*error_1 + (Td/(74*tempo_old))*error_2;
+    if(error_0*sum>=0){
+        sum+=error_0;
+    }else{
+        sum=0;
+    }
+    duty_var = error_0+(74.*tempo/Ti)*sum+(Td/(74*tempo))*(error_0-error_1);
+    //duty_var = error_0;
+    duty_var = 5.*kp*duty_var;
+    //duty_var = 0.2*(error_0-error_1);
     int duty_temp = duty + duty_var;
+    //int duty_temp = 0.2*error_0+55;
    // int duty_temp = 65.+0.45*error_0;
-    if (duty_temp < 15){
-        duty = 15;
+    if (duty_temp < 20){
+        duty = 20;
     }else if(duty_temp > 100){
         duty = 100;
     }else{
@@ -132,29 +143,28 @@ int main(void) {
     T3CONbits.TON = 1; //turn timer3 on
     T2CONbits.TON = 1;      //turns Timer_2 
     
-    unsigned int setpoint=326; // ->duty 
+    unsigned int setpoint=334; // 
     int joao = 0;
+    int tempo_tmr=0, count_tmr=0;
     while(1){
         if(ic1_interr==1 && old_count==0){
             int freq = 1000000./tempo;
             error_2 = error_1;
             error_1 = error_0;
             error_0 = setpoint - freq;
-            printf("\r\n tempo: %d \t error: %d \t duty: %d  \t freq: %u \t setpoint: %d", tempo, error_0, duty, freq, setpoint);
+            printf("\r\n TMR3: %u \t duty: %d \t freq: %u \t error: %d \t duty_var: %f \t sum: %f", tempo, duty, freq, error_0, duty_var, sum);
             //printf("\r\n error: %d \t duty: %d", error, duty);
             PID_control();
             ic1_interr=0;
             /*
-            if(joao==20){
-                duty=95;
-                OC2RS = 0.95*PR2;//duty 75
+            if(joao==50){
+                duty=90;
+                count_tmr = count;
+                tempo_tmr = TMR3;
+                OC2RS = 0.01*duty*PR2;
+                //joao=0;
             }
-            if(joao==100){
-                duty=20;
-                OC2RS = 0.20*PR2;
-                joao=0;
-            }*/
-           // ++joao;
+            ++joao;*/
         }
     }
     return 0;
