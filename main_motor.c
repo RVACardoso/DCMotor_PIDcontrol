@@ -74,7 +74,6 @@ void __attribute__((interrupt, no_auto_psv)) _IC1Interrupt(void){
     ic1_interr=1;
     old_count=count;
     count=0;
-    //_LATC13=~_LATC13;
 }
 
 void IC1_config(){
@@ -93,27 +92,17 @@ void IC1_config(){
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void){    
     IFS0bits.T3IF = 0;
     count++;
-    //print=1;
+
 }   
-//0.000003
 void PID_control(){
-    //float ki = kp*74.*tempo/Ti;
-    //float kd = kp*Td/(74.*tempo);
-    //duty_var = (kp+0.5*ki+kd)*error_0 - (kp-0.5*ki+2*kd)*error_1 + kd*error_2; 
-    //duty_var = kp*(error_0-error_1+(tempo/Ti)*error_0+(Td/tempo)*(error_0-2*error_1+error_2));
-    //duty_var = (1.+(74.*tempo/Ti)+Td/(74.*tempo))*error_0 -(1+(74.*tempo/Ti)+Td/(74*tempo_old))*error_1 + (Td/(74*tempo_old))*error_2;
-    if(error_0*sum>=0){
-        sum+=error_0;
+    
+    if(duty==100 || duty==20){
     }else{
-        sum=0;
-    }
-    duty_var = error_0+(74.*tempo/Ti)*sum+(Td/(74*tempo))*(error_0-error_1);
-    //duty_var = error_0;
+        sum+=error_0;
+    } 
+    duty_var = error_0+(74.*tempo/Ti)*sum+(Td/(74.*tempo))*(error_0-error_1);
     duty_var = 5.*kp*duty_var;
-    //duty_var = 0.2*(error_0-error_1);
     int duty_temp = duty + duty_var;
-    //int duty_temp = 0.2*error_0+55;
-   // int duty_temp = 65.+0.45*error_0;
     if (duty_temp < 20){
         duty = 20;
     }else if(duty_temp > 100){
@@ -153,18 +142,8 @@ int main(void) {
             error_1 = error_0;
             error_0 = setpoint - freq;
             printf("\r\n TMR3: %u \t duty: %d \t freq: %u \t error: %d \t duty_var: %f \t sum: %f", tempo, duty, freq, error_0, duty_var, sum);
-            //printf("\r\n error: %d \t duty: %d", error, duty);
             PID_control();
             ic1_interr=0;
-            /*
-            if(joao==50){
-                duty=90;
-                count_tmr = count;
-                tempo_tmr = TMR3;
-                OC2RS = 0.01*duty*PR2;
-                //joao=0;
-            }
-            ++joao;*/
         }
     }
     return 0;
