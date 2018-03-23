@@ -16,9 +16,13 @@
 #pragma config MCLRE=MCLR_EN
 #pragma config FPWRT=PWRT_OFF
 
-#define kp 0.0033
-#define Ti 596926.
-#define Td 149232.
+//#define kp 0.0034
+#define kp 0.006
+//#define Ti 572723.
+#define Ti 1502723.
+//#define Td 143181.
+#define Td 2000181.
+
 
 //Global variables
 unsigned int tempo=0, tempo_old=0;
@@ -96,10 +100,13 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void){
 }   
 void PID_control(){
     
-    if(duty==100 || duty==20){
-    }else{
-        sum+=error_0;
-    } 
+    if(duty!=100 && duty!=20){
+        if((sum<=-200 && error_0<0) || (sum>=200 && error_0>0)){
+            //sum+=error_0;
+        }else{
+            sum+=error_0;
+        }
+    }
     duty_var = error_0+(74.*tempo/Ti)*sum+(Td/(74.*tempo))*(error_0-error_1);
     duty_var = 5.*kp*duty_var;
     int duty_temp = duty + duty_var;
