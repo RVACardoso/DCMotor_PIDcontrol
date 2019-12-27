@@ -81,7 +81,7 @@ void __attribute__((interrupt, no_auto_psv)) _IC1Interrupt(void){
 }
 
 void IC1_config(){
-    // Configuração do IC ativado em cada flanco descendente 
+    // ConfiguraÃ§Ã£o do IC ativado em cada flanco descendente 
     _TRISD0 = 1;                  // define pin as input
     IC1CONbits.ICM= 0b000;         // Disable Input Capture module
     IC1CONbits.ICTMR= 0;         // Select Timer3 as the IC1 Time base
@@ -136,7 +136,7 @@ int main(void) {
     
     IC1_config();
     
-    T3CONbits.TON = 1; //turn timer3 on
+    T3CONbits.TON = 1;       //turn timer3 on
     T2CONbits.TON = 1;      //turns Timer_2 
     
     unsigned int setpoint=334; // 
